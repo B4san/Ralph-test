@@ -1,0 +1,181 @@
+{
+  "title": "Kanban Mini-Trello Web App",
+  "description": "Construir una web app tipo Trello (kanban) mínima pero real",
+  "features": [
+    "Tablero con 3 columnas (To do / Doing / Done)",
+    "Crear/editar/eliminar tarjetas",
+    "Drag & drop entre columnas",
+    "Persistencia local (LocalStorage) como MVP",
+    "UI limpia y usable",
+    "Tests básicos y typecheck para feedback loop"
+  ],
+  "objectives": [
+    "Validar que Ralph puede construir features UI iterativamente",
+    "Tener un MVP usable tipo Trello en pocas iteraciones",
+    "Forzar feedback loops: typecheck + tests + lint si existe"
+  ],
+  "non_objectives": [
+    "Auth",
+    "DB real / multiusuario",
+    "Realtime / websockets",
+    "Permisos/roles"
+  ],
+  "user": {
+    "description": "Usuario único (local) que organiza tareas en columnas"
+  },
+  "functional_requirements": [
+    {
+      "title": "Board con 3 columnas",
+      "description": "Tablero con 3 columnas por defecto"
+    },
+    {
+      "title": "Cards estructura",
+      "description": "Cards con: id, title, description (opcional), createdAt, columnId, order"
+    },
+    {
+      "title": "Drag & drop",
+      "items": [
+        "Dentro de la misma columna (reordenar)",
+        "Entre columnas (cambiar estado)"
+      ]
+    },
+    {
+      "title": "Persistencia",
+      "items": [
+        "LocalStorage (clave kanban_v1)",
+        "Cargar al iniciar; guardar en cada cambio"
+      ]
+    },
+    {
+      "title": "Accesibilidad mínima",
+      "items": [
+        "Botones con labels",
+        "Navegación usable sin mouse (no perfecta, pero no rota)"
+      ]
+    }
+  ],
+  "non_functional_requirements": [
+    "UI rápida, sin lag notable con 50–100 tarjetas",
+    "Código limpio, comentado solo donde aporte",
+    "Componentización clara"
+  ],
+  "recommended_architecture": {
+    "state": "state central (Zustand o Context+Reducer; usar lo que ya tenga el repo)",
+    "types": "Tipos TS en types.ts",
+    "persistence": "Persistencia en lib/storage.ts",
+    "components": "UI components: Board, Column, Card, CardModal o CardEditor"
+  },
+  "definition_of_done": [
+    "Todas las historias en prd.json pasan (passes: true)",
+    "npm run typecheck pasa",
+    "npm test pasa (al menos tests de reducer/store y persistencia)",
+    "Drag & drop funciona en navegador",
+    "Persistencia funciona (refresh conserva board)"
+  ],
+  "user_stories": [
+    {
+      "id": "US-001",
+      "title": "Scaffold UI del Board (sin lógica)",
+      "description": "Como usuario\nQuiero ver un tablero con 3 columnas\nPara entender el layout",
+      "acceptance_criteria": [
+        "Página /kanban (o ruta equivalente) muestra columnas \"To do\", \"Doing\", \"Done\"",
+        "Cada columna tiene header + contador (0)",
+        "Estado inicial hardcoded (sin store)",
+        "Responsive básico"
+      ],
+      "passes": false
+    },
+    {
+      "id": "US-002",
+      "title": "Modelo de datos + state central",
+      "description": "Como developer\nQuiero un store con columnas y tarjetas\nPara manejar estado consistentemente",
+      "acceptance_criteria": [
+        "Tipos TS: Column, Card, BoardState",
+        "Store con acciones: addCard(columnId, cardData), updateCard(cardId, updates), deleteCard(cardId), moveCard(cardId, toColumnId, toIndex)",
+        "Estado inicial: 3 columnas vacías",
+        "npm run typecheck pasa"
+      ],
+      "passes": false
+    },
+    {
+      "id": "US-003",
+      "title": "Crear tarjeta (UI + store)",
+      "description": "Como usuario\nQuiero crear tarjetas en una columna\nPara agregar tareas",
+      "acceptance_criteria": [
+        "Botón \"Add card\" por columna",
+        "Form inline o modal: title requerido, description opcional",
+        "Al guardar, aparece la tarjeta y aumenta contador",
+        "Validación: no permite title vacío"
+      ],
+      "passes": false
+    },
+    {
+      "id": "US-004",
+      "title": "Editar y eliminar tarjeta",
+      "description": "Como usuario\nQuiero editar/eliminar tarjetas\nPara mantener el board actualizado",
+      "acceptance_criteria": [
+        "Click en tarjeta abre editor (modal o panel)",
+        "Edita title/description",
+        "Botón delete con confirm simple",
+        "UI no se rompe con textos largos"
+      ],
+      "passes": false
+    },
+    {
+      "id": "US-005",
+      "title": "Drag & drop entre columnas (MVP)",
+      "description": "Como usuario\nQuiero arrastrar tarjetas entre columnas\nPara mover tareas de estado",
+      "acceptance_criteria": [
+        "Drag card → drop en otra columna funciona",
+        "Al soltar, actualiza columnId y orden",
+        "Reordenar dentro de misma columna funciona (si la lib lo facilita)",
+        "Si hay que elegir librería: usar una estable (ej: dnd-kit) o la que ya exista en el repo",
+        "Verify in browser (criterio obligatorio)"
+      ],
+      "passes": false
+    },
+    {
+      "id": "US-006",
+      "title": "Persistencia en LocalStorage",
+      "description": "Como usuario\nQuiero que el tablero se guarde automáticamente\nPara no perder cambios al refrescar",
+      "acceptance_criteria": [
+        "Carga initial state desde LocalStorage si existe",
+        "Guarda en cada mutación",
+        "Botón \"Reset board\" que limpia storage y vuelve a vacío",
+        "Manejo de errores: si storage corrupto, fallback a vacío sin crashear"
+      ],
+      "passes": false
+    },
+    {
+      "id": "US-007",
+      "title": "Tests mínimos (feedback loop real)",
+      "description": "Como developer\nQuiero tests automáticos\nPara asegurar que Ralph no degrade el estado",
+      "acceptance_criteria": [
+        "Tests para: addCard agrega card con id único",
+        "moveCard cambia columna y orden",
+        "persistencia: serialize/deserialize (o wrapper storage)",
+        "npm test pasa"
+      ],
+      "passes": false
+    },
+    {
+      "id": "US-008",
+      "title": "Pulido UI + UX rápida",
+      "description": "Como usuario\nQuiero una experiencia agradable\nPara usar el MVP sin frustración",
+      "acceptance_criteria": [
+        "Loading state (instantáneo, pero sin parpadeos)",
+        "Empty state por columna",
+        "Contadores correctos",
+        "Acciones visibles en hover/focus",
+        "Mantener estilo minimal/pro"
+      ],
+      "passes": false
+    }
+  ],
+  "quality_commands": [
+    "npm run typecheck (o el equivalente real del repo)",
+    "npm test",
+    "npm run lint (si existe)",
+    "npm run dev (para verificación manual/automática si frontend)"
+  ]
+}
